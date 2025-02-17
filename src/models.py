@@ -1,34 +1,56 @@
 import os
 import sys
-from sqlalchemy.orm import declarative_base, Mapped, mapped_column
-from sqlalchemy import create_engine
+from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy import Column, Integer, String, create_engine, ForeignKey
 from eralchemy2 import render_er
 
 Base = declarative_base()
 
-class Person(Base):
-    __tablename__ = 'person'
+class User(Base):
+    __tablename__ = 'user'
     # Here we define columns for the table person
     # Notice that each column is also a normal Python instance attribute.
-    id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(nullable=False)
+    id = Column(Integer, primary_key=True)
+    user_name = Column(String(250), nullable=False)
+    first_name = Column(String(250))
+    last_name = Column(String(250))
+    email = Column(String(250), nullable=False)
+    follower = relationship("Follower", backref="user")
+    post = relationship("Post", backref='user')
+    comment_relation = relationship("Comment", backref="author")
+    
 
-class Address(Base):
-    __tablename__ = 'address'
-    # Here we define columns for the table address.
-    # Notice that each column is also a normal Python instance attribute.
-    id: Mapped[int] = mapped_column(primary_key=True)
-    street_name: Mapped[str]
-    street_number: Mapped[str]
-    post_code: Mapped[str] = mapped_column(nullable=False)
 
-    def to_dict(self):
-        return {}
+class Follower(Base):
+    __tablename__ = 'follower'
+    id_follow = Column(Integer, primary_key=True)
+    user_from_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    user_to_id = Column(Integer, ForeignKey('user.id'), nullable=False)
 
-## Draw from SQLAlchemy base
-try:
-    result = render_er(Base, 'diagram.png')
-    print("Success! Check the diagram.png file")
-except Exception as e:
-    print("There was a problem genering the diagram")
-    raise e
+
+class Post(Base):
+    __tablename__='post'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    comment_relationship = relationship('comment', backref="post")
+    media_relationship = relationship('media', backref='post')
+
+class Comment(Base):
+    __tablename__='comment'
+    id = Column(Integer, primary_key=True)
+    comment_text =Column(String(250), nullable=False)
+    author_id = Column(Integer, ForeignKey('author.id'), nullable=False)
+    post_id = Column(Integer, ForeignKey('post.id'), nullable=False)
+
+
+class Media(Base):
+    __tablename__='media'
+    id = Column(Integer, primary_key=True)
+    url = Column(String(250), nullable=False)
+    type = Column(String(250), nullable=False)
+    post_id = Column(Integer, ForeignKey('post.id'), nullable=False)
+    
+
+
+
+render_er(Base, 'diagram.png')
